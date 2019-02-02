@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  googlebookstelegrambot:
+    image: ${DOCKER_REGISTRY-}googlebookstelegrambot
+    build:
+      context: .
+      dockerfile: GoogleBooksTelegramBot/Dockerfile
