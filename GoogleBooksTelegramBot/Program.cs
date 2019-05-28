@@ -36,17 +36,24 @@ namespace GoogleBooksTelegramBot
 
         private static async void OnOnMessageAsync(object sender, MessageEventArgs messageEventArgs)
         {
-            var message = messageEventArgs.Message;
+            try
+            {
+                var message = messageEventArgs.Message;
 
-            if (message.Text.StartsWith("/start"))
-                await _bot.SendTextMessageAsync(new ChatId(message.From.Id),
-                    "This bot can help you find and share books. It is works in any chat, just write @GBooksBot " +
-                    "in the text field. Let's try!",
-                    replyMarkup: new InlineKeyboardMarkup(new[]
-                    {
-                        InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("🔍 Search books"),
-                        InlineKeyboardButton.WithSwitchInlineQuery("🔗 Find and share book with friends")
-                    }));
+                if (message.Text.StartsWith("/start"))
+                    await _bot.SendTextMessageAsync(new ChatId(message.From.Id),
+                        "This bot can help you find and share books. It is works in any chat, just write @GBooksBot " +
+                        "in the text field. Let's try!",
+                        replyMarkup: new InlineKeyboardMarkup(new[]
+                        {
+                            InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("🔍 Search books"),
+                            InlineKeyboardButton.WithSwitchInlineQuery("🔗 Find and share book with friends")
+                        }));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
         }
 
         private static async void OnInlineQueryAsync(object sender, InlineQueryEventArgs inlineQueryEventArgs)
@@ -57,6 +64,8 @@ namespace GoogleBooksTelegramBot
 
             var listBooksRequest = BooksService.Volumes.List(inlineQuery.Query);
             var books = await listBooksRequest.ExecuteAsync();
+
+            if (books?.Items == null || !books.Items.Any()) return;
 
             var response = books.Items.Select(volume =>
             {
@@ -84,7 +93,7 @@ namespace GoogleBooksTelegramBot
             if (volume.VolumeInfo.Authors != null)
                 resultString += $"Author(s): {string.Join(", ", volume.VolumeInfo.Authors)}\n";
 
-            return resultString + $"Rating: {new string('⭐', 3)}\n";
+            return resultString + $"Rating: {new string('⭐', Convert.ToInt32(volume.VolumeInfo.AverageRating))}\n";
         }
     }
 }
